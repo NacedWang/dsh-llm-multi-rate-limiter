@@ -67,7 +67,7 @@
 
 1. 在 DSH profile 的 `package.json`（`~/.dsh/profiles/desktop/package.json`）里加依赖：
    ```json
-   "@naced/llm-multi-rate-limiter": "^0.2.0"
+   "@naced/llm-multi-rate-limiter": "^0.1.2"
    ```
    然后在 profile 目录执行 `pnpm install`（或用 DSH 插件管理器的安装动作）。
 2. `dsh.profile.bundles` 列表中加入 `"@naced/llm-multi-rate-limiter"`。

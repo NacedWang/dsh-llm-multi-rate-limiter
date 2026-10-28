@@ -1,6 +1,6 @@
 {
   "name": "@naced/llm-multi-rate-limiter",
-  "version": "0.2.0",
+  "version": "0.1.2",
   "description": "Per-model LLM call rate limiter for DeepSeek Harness with a Settings section UI, queueing and a live status panel",
   "type": "module",
   "main": "lib/index.js",

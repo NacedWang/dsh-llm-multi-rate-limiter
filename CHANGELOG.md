@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0] - 2026-10-28
+## [0.1.2] - 2026-10-28
 
 Concurrency accounting fix, provider-wide tiers, wildcard keys, adaptive 429 backoff, and a tested toolchain.
 

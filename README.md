@@ -68,7 +68,7 @@ From the npm registry (recommended):
 
 1. Add the dependency to your DSH profile's `package.json` (`~/.dsh/profiles/desktop/package.json`):
    ```json
-   "@naced/llm-multi-rate-limiter": "^0.2.0"
+   "@naced/llm-multi-rate-limiter": "^0.1.2"
    ```
    then install it in the profile directory (`pnpm install`, or the DSH plugin manager's install action).
 2. Add `"@naced/llm-multi-rate-limiter"` to `dsh.profile.bundles`.
