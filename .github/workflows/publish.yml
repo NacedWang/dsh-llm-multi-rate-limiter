@@ -1,0 +1,68 @@
+name: publish
+
+# Publishes to npm when a version tag is pushed (e.g. `git tag v0.1.1 && git push --tags`).
+#
+# Uses npm Trusted Publishing (OIDC): no NPM_TOKEN secret is stored anywhere.
+# Requires, on the package's npm settings page → "Trusted Publisher":
+#   publisher: GitHub Actions
+#   organization/user: NacedWang
+#   repository: dsh-llm-multi-rate-limiter
+#   workflow filename: publish.yml
+#   environment: (leave empty)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required: lets npm exchange the OIDC token for a short-lived publish credential
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      # Trusted publishing needs a recent npm (>= 11.5.2 for OIDC).
+      - name: Upgrade npm
+        run: npm install -g npm@11
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build (syntax check)
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public --provenance
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "See [CHANGELOG.md](CHANGELOG.md) for details." \
+            --verify-tag

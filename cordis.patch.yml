@@ -1,0 +1,3 @@
+- insert:
+    - id: llm-multi-rate-limiter
+      name: '@naced/llm-multi-rate-limiter'

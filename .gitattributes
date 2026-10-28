@@ -1,0 +1,8 @@
+# Normalize line endings: store LF in the repository, check out LF everywhere.
+* text=auto eol=lf
+
+# Keep the published bundle byte-identical to the source.
+*.js text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
