@@ -12,9 +12,13 @@ Forked from [`@leaf233/dsh-llm-rate-limiter`](https://github.com/Leafyezi233/dsh
 ## Features
 
 - **Two strategies**: token bucket (bursts allowed) or sliding window (strict N per minute).
+- **Three configuration tiers**: `models` (exact or wildcard key) > `providers` (one cap per provider) > `defaults`.
+- **Wildcard keys**: `openai/*` covers every model of that provider without its own limit. `*` stays inside one path segment and never crosses `/`.
 - **Per-model overrides**, keyed `provider/model`, e.g. `openai/gpt-5.1`.
+- **Adaptive 429 backoff**: when the provider answers 429, that model slows down by `factor` for `cooldownMs` and recovers after `recoverAfter` consecutive successes.
 - **Queue or reject** throttled calls (`onThrottled`, bounded by `maxQueueWaitMs`).
 - **Live panel**: polls the `/llm-multi-rate-limiter` status channel once per second — per-model token/window usage, granted calls, average wait, recent events.
+- **Settings page**: model search, delete confirmation, and whole-config JSON import/export.
 
 ## Configuration
 
@@ -31,20 +35,30 @@ Forked from [`@leaf233/dsh-llm-rate-limiter`](https://github.com/Leafyezi233/dsh
       maxRpm: 60
       burstSize: 10
       refillRate: 1
+    providers:
+      openai:
+        maxRpm: 30
+        maxConcurrent: 3
     models:
       openai/gpt-5.1:
         maxRpm: 20
         maxConcurrent: 2
-      deepseek/deepseek-chat:
-        maxRpm: 60
-        maxConcurrent: 5
+      "azure/*":
+        maxRpm: 40
+    cooldown:
+      enabled: true
+      cooldownMs: 30000
+      factor: 0.5
+      recoverAfter: 3
     onThrottled: queue
     maxQueueWaitMs: 240000
 ```
 
 - The row `id` is also the settings namespace (`dsh-settings` keys forms by `entry.options.id`), so keep it in step with the row.
-- `models[<key>]` only needs the fields you override; the rest inherits `defaults`.
+- Precedence: exact `models` key > most specific wildcard in `models` > `providers[<provider>]` > `defaults`.
+- `models[<key>]` only needs the fields you override; the rest is inherited tier by tier.
 - Under the token bucket, an omitted `refillRate` (tokens/second) is derived from `maxRpm / 60`.
+- A wildcard `*` matches within one path segment only, so `openai/*` cannot accidentally cover another provider; use `*/*` to cover everything.
 
 Edits made in the Settings page are written back to `cordis.patch.yml` immediately and hot-reload through `dsh-hmr`.
 
@@ -54,7 +68,7 @@ From the npm registry (recommended):
 
 1. Add the dependency to your DSH profile's `package.json` (`~/.dsh/profiles/desktop/package.json`):
    ```json
-   "@naced/llm-multi-rate-limiter": "^0.1.1"
+   "@naced/llm-multi-rate-limiter": "^0.2.0"
    ```
    then install it in the profile directory (`pnpm install`, or the DSH plugin manager's install action).
 2. Add `"@naced/llm-multi-rate-limiter"` to `dsh.profile.bundles`.
@@ -80,7 +94,7 @@ If the limiter itself throws, the call is passed through untouched rather than f
 git clone https://github.com/NacedWang/dsh-llm-multi-rate-limiter.git
 cd dsh-llm-multi-rate-limiter
 npm install
-npm run build     # node --check on both entry points
+npm run check     # syntax check + ESLint + node:test
 npm pack --dry-run
 ```
 

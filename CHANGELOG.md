@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.0] - 2026-10-28
+
+Concurrency accounting fix, provider-wide tiers, wildcard keys, adaptive 429 backoff, and a tested toolchain.
+
+### Fixed
+
+- **Queue drain over-granted concurrency**: a waiter released by `releaseSlot()` counted against neither `#concurrent` nor any reservation, so one release could admit the entire queue at once. Both strategies now reserve a slot when they grant one, and `#drain()` compares `#concurrent + #reserved` against `maxConcurrent`.
+- **Timeout and drain could settle the same waiter twice**: `acquire()` now guards its settlement with a `settled` flag.
+- **Retry storm after a queue timeout**: a queue timeout now fails with `RATE_LIMIT_QUEUE_TIMEOUT` instead of the retryable `RATE_LIMIT`, so `dsh-llm-retry` no longer replays the same saturated model six times. Reject mode uses `RATE_LIMIT_REJECTED`.
+- **Limiter instances leaked**: idle limiters with no override are swept every minute (10-minute idle window) once they have no concurrency, reservations or waiters.
+
+### Added
+
+- **Provider tier** (`providers.<provider>`): one cap for every model of a provider, below per-model overrides and above `defaults`.
+- **Wildcard model keys** (`openai/*`, `*/*`): `*` compiles to `[^/]*`, so it stays inside one path segment and cannot silently cover another provider. The most specific pattern wins.
+- **Adaptive 429 backoff** (`cooldown`): when the provider answers 429, that model's limits are scaled by `factor` for `cooldownMs` (or the response's `Retry-After`, if longer) and recover after `recoverAfter` consecutive successes. Counted in the status snapshot as `effectiveMaxRpm` / `cooling`.
+- **Settings page**: model search filter, delete confirmation, and whole-config JSON import/export.
+- **Tests**: `node --test` suites for tier resolution, wildcard matching, cooldown bookkeeping and both strategies — including a regression test that one release admits exactly one waiter.
+- **Type declarations** (`lib/index.d.ts`) and an **ESLint** flat config; `npm run check` runs syntax, lint and tests.
+- CI now runs the full check on both Ubuntu and Windows.
+
+### Changed
+
+- `lib/config-resolve.js` holds tier resolution and the cooldown tracker as pure functions, shared by the host entry and the tests.
+- The status snapshot reports `reserved` slots per model and `throttledByProvider` in totals.
+
 ## [0.1.1] - 2026-10-28
 
 Repository and release plumbing; no behavioural change to the limiter.

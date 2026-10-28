@@ -1,15 +1,20 @@
 {
   "name": "@naced/llm-multi-rate-limiter",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Per-model LLM call rate limiter for DeepSeek Harness with a Settings section UI, queueing and a live status panel",
   "type": "module",
   "main": "lib/index.js",
+  "types": "./lib/index.d.ts",
   "exports": {
-    ".": "./lib/index.js",
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
     "./client": "./lib/client.js",
     "./package.json": "./package.json"
   },
   "engines": {
+    "node": ">=20",
     "dsh": ">=0.2.1-rc.2"
   },
   "author": "Naced <869521569@qq.com>",
@@ -39,9 +44,11 @@
     }
   },
   "scripts": {
-    "build": "node --check lib/index.js && node --check lib/client.js",
-    "test": "node --check lib/index.js && node --check lib/client.js",
-    "prepublishOnly": "npm run build"
+    "build": "node --check lib/index.js && node --check lib/client.js && node --check lib/config-resolve.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "check": "npm run build && npm run lint && npm test",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "dsh",
@@ -61,7 +68,8 @@
     "@deepseek-ai/schemastery": "^3.18.4"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-settings": "^0.1.7-rc.1"
+    "@deepseek-ai/dsh-settings": "^0.1.7-rc.1",
+    "eslint": "^9.15.0"
   },
   "files": [
     "lib/",

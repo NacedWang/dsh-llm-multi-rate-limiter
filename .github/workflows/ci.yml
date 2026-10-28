@@ -10,7 +10,15 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    name: check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The plugin runs inside the desktop app, so Windows is a first-class
+        # target — path separators, line endings and the timer behaviour differ
+        # enough that a Linux-only matrix would miss real breakage.
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +31,12 @@ jobs:
 
       - name: Syntax check
         run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
 
       - name: Pack dry run
         run: npm pack --dry-run
